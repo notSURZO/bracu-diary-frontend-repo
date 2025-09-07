@@ -3,10 +3,11 @@ import { connectToDatabase } from '@/lib/mongodb';
 import Review from '@/lib/models/Review';
 import mongoose from 'mongoose';
 
-export async function POST(request: Request, { params }: { params: { reviewId: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ reviewId: string }> }) {
   try {
     await connectToDatabase();
-    const { reviewId } = await params;
+    const resolvedParams = await params;
+    const { reviewId } = resolvedParams;
     const { userEmail, voteType } = await request.json();
 
     if (!userEmail || !voteType || (voteType !== 'agree' && voteType !== 'disagree') || !mongoose.Types.ObjectId.isValid(reviewId)) {

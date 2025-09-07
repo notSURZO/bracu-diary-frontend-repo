@@ -7,11 +7,13 @@ import User from '@/lib/models/User';
 // GET - Fetch a specific event by ID
 export async function GET(
   req: NextRequest,
-  { params }: { params: { eventId: string } }
+  { params }: { params: Promise<{ eventId: string }> }
 ) {
+  // Await params before using
+  const resolvedParams = await params;
+  const { eventId } = resolvedParams;
+
   try {
-    // Await params before using
-    const { eventId } = await params;
     console.log('Fetching event with ID:', eventId);
     await connectToDatabase();
     
@@ -68,13 +70,13 @@ export async function GET(
     console.error('Error details:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
-      eventId: params.eventId
+      eventId: resolvedParams.eventId
     });
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
-    return NextResponse.json({ 
-      message: 'Failed to fetch event', 
+    return NextResponse.json({
+      message: 'Failed to fetch event',
       error: message,
-      eventId: params.eventId 
+      eventId: resolvedParams.eventId
     }, { status: 500 });
   }
 }
@@ -82,7 +84,7 @@ export async function GET(
 // PUT - Update a specific event (admin only)
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { eventId: string } }
+  { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -91,10 +93,11 @@ export async function PUT(
     }
 
     // Await params before using
-    const { eventId } = await params;
+    const resolvedParams = await params;
+    const { eventId } = resolvedParams;
 
     await connectToDatabase();
-    
+
     // Get user's profile and check admin status
     const user = await User.findOne({ clerkId: userId });
     if (!user) {
@@ -134,7 +137,7 @@ export async function PUT(
 
     // Update the event
     const updatedEvent = await Event.findByIdAndUpdate(
-      params.eventId,
+      eventId,
       {
         title: title.trim(),
         description: description.trim(),
@@ -188,7 +191,7 @@ export async function PUT(
 // DELETE - Delete a specific event (admin only)
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { eventId: string } }
+  { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -197,10 +200,11 @@ export async function DELETE(
     }
 
     // Await params before using
-    const { eventId } = await params;
+    const resolvedParams = await params;
+    const { eventId } = resolvedParams;
 
     await connectToDatabase();
-    
+
     // Get user's profile and check admin status
     const user = await User.findOne({ clerkId: userId });
     if (!user) {
@@ -228,7 +232,7 @@ export async function DELETE(
     const imageBucket = event.imageBucket;
 
     // Delete the event from database
-    await Event.findByIdAndDelete(params.eventId);
+    await Event.findByIdAndDelete(eventId);
 
     // Clean up the image from Supabase storage if it exists
     if (imagePath && imageBucket) {

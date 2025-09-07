@@ -6,7 +6,7 @@ import { auth } from '@clerk/nextjs/server';
 // DELETE - Delete a specific activity
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -14,23 +14,24 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const resolvedParams = await params;
     await connectToDatabase();
 
     // Find the activity and verify ownership
-    const activity = await Activity.findOne({ 
-      _id: params.id, 
-      userId 
+    const activity = await Activity.findOne({
+      _id: resolvedParams.id,
+      userId
     });
 
     if (!activity) {
       return NextResponse.json(
-        { error: 'Activity not found or access denied' }, 
+        { error: 'Activity not found or access denied' },
         { status: 404 }
       );
     }
 
     // Delete the activity
-    await Activity.deleteOne({ _id: params.id });
+    await Activity.deleteOne({ _id: resolvedParams.id });
 
     return NextResponse.json({
       success: true,

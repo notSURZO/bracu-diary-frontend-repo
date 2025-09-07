@@ -14,7 +14,7 @@ export async function getConnectionIds(userId: string): Promise<string[]> {
     status: 'accepted',
   }).lean();
 
-  const connectionIds = connections.map((conn: IConnection) => {
+  const connectionIds = connections.map((conn: any) => {
     return conn.senderId === userId ? conn.receiverId : conn.senderId;
   });
 

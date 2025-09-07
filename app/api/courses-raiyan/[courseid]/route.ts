@@ -4,10 +4,10 @@ import Course from '@/lib/models/Course';
 import Review from '@/lib/models/Review';
 import mongoose from 'mongoose';
 
-export async function GET(request: Request, context: { params: { courseid: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ courseid: string }> }) {
   try {
     // Await the params to correctly access the dynamic route parameter
-    const { courseid: courseId } = await (context as any).params;
+    const { courseid: courseId } = await params;
 
     if (!courseId || !mongoose.Types.ObjectId.isValid(courseId)) {
       return NextResponse.json({ message: 'Invalid Course ID' }, { status: 400 });

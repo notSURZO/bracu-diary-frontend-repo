@@ -37,7 +37,8 @@ export async function POST(request: Request) {
     // Fetch user's profile image from Clerk
     let userImageUrl = picture_url || '';
     try {
-      const clerkUser = await clerkClient.users.getUser(clerkId);
+      const client = await clerkClient();
+      const clerkUser = await client.users.getUser(clerkId);
       userImageUrl = clerkUser.imageUrl || '';
       console.log('Fetched user image from Clerk:', userImageUrl);
     } catch (clerkError) {

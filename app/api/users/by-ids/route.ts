@@ -28,9 +28,10 @@ export async function POST(request: Request) {
     const missingForAvatar = ids.filter((id) => !byId[id] || !byId[id].picture_url);
     if (missingForAvatar.length) {
       try {
+        const client = await clerkClient();
         for (const id of missingForAvatar) {
           try {
-            const cu = await clerkClient.users.getUser(id);
+            const cu = await client.users.getUser(id);
             const img = cu?.imageUrl || '';
             if (!byId[id]) byId[id] = { id, name: [cu?.firstName, cu?.lastName].filter(Boolean).join(' '), picture_url: img };
             else if (!byId[id].picture_url) byId[id].picture_url = img;

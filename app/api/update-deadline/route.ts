@@ -18,6 +18,10 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    if (!user.deadlines) {
+      return NextResponse.json({ error: 'User deadlines not found' }, { status: 404 });
+    }
+
     const deadline = user.deadlines.find((d: any) => d.id === deadlineId);
     if (!deadline) {
       return NextResponse.json({ error: 'Deadline not found in user data' }, { status: 404 });

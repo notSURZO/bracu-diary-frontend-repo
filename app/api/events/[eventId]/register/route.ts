@@ -9,7 +9,7 @@ import { logEventRegistration } from '@/lib/utils/activityLogger';
 // POST - Register current user for the event
 export async function POST(
   req: NextRequest,
-  { params }: { params: { eventId: string } }
+  { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -17,6 +17,7 @@ export async function POST(
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
+    const resolvedParams = await params;
     await connectToDatabase();
 
     const user = await User.findOne({ clerkId: userId });
@@ -24,7 +25,7 @@ export async function POST(
       return NextResponse.json({ message: 'User not found' }, { status: 404 });
     }
 
-    const event = await Event.findById(params.eventId);
+    const event = await Event.findById(resolvedParams.eventId);
     if (!event) {
       return NextResponse.json({ message: 'Event not found' }, { status: 404 });
     }
@@ -79,7 +80,7 @@ export async function POST(
 // DELETE - Cancel current user's registration for the event
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { eventId: string } }
+  { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -87,12 +88,13 @@ export async function DELETE(
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
+    const resolvedParams = await params;
     await connectToDatabase();
     const user = await User.findOne({ clerkId: userId });
     if (!user) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 });
     }
-    const event = await Event.findById(params.eventId);
+    const event = await Event.findById(resolvedParams.eventId);
     if (!event) {
       return NextResponse.json({ message: 'Event not found' }, { status: 404 });
     }

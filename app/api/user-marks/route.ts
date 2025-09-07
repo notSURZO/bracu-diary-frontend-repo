@@ -39,6 +39,10 @@ export async function POST(req: NextRequest) {
     const dbUser = await User.findOne({ clerkId: user.id });
     if (!dbUser) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
+    if (!dbUser.marks) {
+      dbUser.marks = [];
+    }
+
     const newMark = { deadlineId, obtained, outOf };
     const markTypeField = type.toLowerCase(); // 'quiz', 'assignment', etc.
 
@@ -46,12 +50,14 @@ export async function POST(req: NextRequest) {
 
     if (courseMarks) {
       const markArray = courseMarks[markTypeField as keyof typeof courseMarks];
-      const existingMarkIndex = markArray.findIndex((m: any) => m.deadlineId === deadlineId);
-      
-      if (existingMarkIndex > -1) {
-        markArray[existingMarkIndex] = newMark;
-      } else {
-        markArray.push(newMark);
+      if (Array.isArray(markArray)) {
+        const existingMarkIndex = markArray.findIndex((m: any) => m.deadlineId === deadlineId);
+
+        if (existingMarkIndex > -1) {
+          markArray[existingMarkIndex] = newMark;
+        } else {
+          markArray.push(newMark);
+        }
       }
     } else {
       const newCourseMarks: any = {

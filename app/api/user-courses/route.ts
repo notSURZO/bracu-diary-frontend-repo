@@ -255,7 +255,7 @@ export async function GET(req: Request) {
   }
 
   // If enrolledCourses contains only IDs, fetch full course details
-  const enrolledCourseIds = user.enrolledCourses;
+  const enrolledCourseIds = user.enrolledCourses as (string | any)[];
   const enrolledCourses = [];
 
   for (const courseId of enrolledCourseIds) {

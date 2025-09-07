@@ -4,11 +4,12 @@ import User from '@/lib/models/User';
 
 export async function GET(
   request: Request,
-  { params }: { params: { studentId: string } }
+  { params }: { params: Promise<{ studentId: string }> }
 ) {
   try {
     await connectToDatabase();
-    const { studentId } = params;
+    const resolvedParams = await params;
+    const { studentId } = resolvedParams;
 
     // Find user by student ID
     const userDoc = await User.findOne({ student_ID: studentId });

@@ -31,9 +31,10 @@ async function getSharedDirectories(ownerClerkId: string): Promise<ICourseResour
   return directories as unknown as ICourseResourceDirectory[];
 }
 
-export default async function ConnectionResourcesPage({ params }: { readonly params: { clerkId:string } }) {
+export default async function ConnectionResourcesPage({ params }: { readonly params: Promise<{ clerkId:string }> }) {
   const { userId: viewerId } = await auth();
-  const { clerkId: ownerId } = params;
+  const resolvedParams = await params;
+  const { clerkId: ownerId } = resolvedParams;
 
   if (!viewerId) {
     return <div className="p-6 text-center text-gray-600">Please sign in to view this page.</div>;

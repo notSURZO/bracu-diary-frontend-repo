@@ -6,14 +6,16 @@ import CourseResource from '@/lib/models/CourseResource';
 import { getSupabaseAdmin } from '@/lib/storage/supabase';
 import { logResourceDeleted } from '@/lib/utils/activityLogger';
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  console.log('DELETE /api/private-resources/[id] called with id:', params.id);
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await connectToDatabase();
     const { userId } = getAuth(req);
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { id } = params;
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
+    console.log('DELETE /api/private-resources/[id] called with id:', id);
+
     if (!id) return NextResponse.json({ error: 'Invalid id', reason: 'missing_id' }, { status: 400 });
 
     const resource = await CourseResource.findById(id);

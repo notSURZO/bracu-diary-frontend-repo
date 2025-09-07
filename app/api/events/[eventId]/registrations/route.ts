@@ -8,7 +8,7 @@ import User from '@/lib/models/User';
 // GET - Fetch registered users for a specific event (admin only)
 export async function GET(
   req: NextRequest,
-  { params }: { params: { eventId: string } }
+  { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -16,6 +16,7 @@ export async function GET(
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
+    const resolvedParams = await params;
     await connectToDatabase();
     
     // Get user's profile and check admin status
@@ -30,7 +31,7 @@ export async function GET(
     }
 
     // Find the event and verify ownership
-    const event = await Event.findById(params.eventId);
+    const event = await Event.findById(resolvedParams.eventId);
     if (!event) {
       return NextResponse.json({ message: 'Event not found' }, { status: 404 });
     }
@@ -42,7 +43,7 @@ export async function GET(
 
     // Fetch registrations with user details
     const registrations = await EventRegistration.find({ 
-      event: params.eventId,
+      event: resolvedParams.eventId,
       status: 'registered' // Only show active registrations
     })
     .populate('user', 'name email student_ID picture_url')
