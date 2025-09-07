@@ -1,13 +1,16 @@
 'use client';
 
+
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+
 
 function randomSlug() {
   const s = Math.random().toString(36).slice(2, 8);
   return `study-${s}`;
 }
+
 
 export default function StudyRoomsHome() {
   const [room, setRoom] = useState('');
@@ -22,6 +25,7 @@ export default function StudyRoomsHome() {
   const [banner, setBanner] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const router = useRouter();
 
+
   const join = (e?: React.FormEvent) => {
     e?.preventDefault();
     const slug = (room || '').trim();
@@ -29,9 +33,11 @@ export default function StudyRoomsHome() {
     router.push(`/study-rooms/${encodeURIComponent(slug)}`);
   };
 
+
   const createInstant = () => {
     router.push(`/study-rooms/${randomSlug()}`);
   };
+
 
   const openInviteModal = async () => {
     setInviteOpen(true);
@@ -47,6 +53,7 @@ export default function StudyRoomsHome() {
     }
   };
 
+
   const filteredFriends = useMemo(() => {
     const q = friendQuery.trim().toLowerCase();
     if (!q) return friends;
@@ -57,6 +64,7 @@ export default function StudyRoomsHome() {
     );
   }, [friendQuery, friends]);
 
+
   const toggleSelect = (email: string) => {
     setSelectedEmails(prev => {
       const next = new Set(prev);
@@ -65,6 +73,7 @@ export default function StudyRoomsHome() {
     });
   };
 
+
   const toggleSelectAll = () => {
     if (selectedEmails.size === filteredFriends.length) {
       setSelectedEmails(new Set());
@@ -72,6 +81,7 @@ export default function StudyRoomsHome() {
       setSelectedEmails(new Set(filteredFriends.map(f => f.email)));
     }
   };
+
 
   const sendSelectedInvites = async () => {
     try {
@@ -96,31 +106,44 @@ export default function StudyRoomsHome() {
       } else {
         setBanner({ type: 'error', text: data.message || 'Failed to start study session' });
       }
-    } catch (e) {
+    } catch {
       setBanner({ type: 'error', text: 'Error starting session' });
     } finally {
       setSendingInvites(false);
     }
   };
 
+
+  type StudyInvite = { _id: string; roomSlug: string; hostName: string; createdAt: string };
+  type InvitesResponse = { invites?: StudyInvite[] };
+
+
   const loadInvites = async () => {
     try {
       setLoadingInvites(true);
       const res = await fetch('/api/study-sessions/invites');
-      const data = await res.json();
+      const data = (await res.json()) as InvitesResponse;
       if (res.ok) {
-        setInvites((data.invites || []).map((i: any) => ({ _id: String(i._id), roomSlug: i.roomSlug, hostName: i.hostName, createdAt: i.createdAt })));
+        const list = (data.invites || []).map((i) => ({
+          _id: String(i._id),
+          roomSlug: i.roomSlug,
+          hostName: i.hostName,
+          createdAt: i.createdAt,
+        }));
+        setInvites(list);
       }
     } finally {
       setLoadingInvites(false);
     }
   };
 
+
   useEffect(() => {
     loadInvites();
-    const t = setInterval(loadInvites, 15000);
-    return () => clearInterval(t);
+    // Removed periodic polling; fetch occurs on page load and via Refresh button only
+    return () => {};
   }, []);
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-slate-100">
@@ -134,6 +157,7 @@ export default function StudyRoomsHome() {
                 <p className="text-gray-600 mt-1">Join or create a free study room powered by Jitsi.</p>
               </div>
             </div>
+
 
             <form onSubmit={join} className="mt-6 space-y-4">
               <div>
@@ -156,6 +180,7 @@ export default function StudyRoomsHome() {
                 </div>
               </div>
 
+
               <div className="flex flex-col sm:flex-row gap-3">
                 <button type="button" onClick={openInviteModal} className="flex-1 inline-flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M15 12a3 3 0 10-3-3 3 3 0 003 3zm-6 0a3 3 0 10-3-3 3 3 0 003 3zm0 2a5.985 5.985 0 00-4.9 2.6 1 1 0 00.2 1.4A9.931 9.931 0 0012 21a9.931 9.931 0 007.7-3 1 1 0 00.2-1.4A5.985 5.985 0 0015 14a7.936 7.936 0 00-6 0z"/></svg>
@@ -165,7 +190,9 @@ export default function StudyRoomsHome() {
               </div>
             </form>
 
-            <div className="mt-6 text-xs text-gray-500">By using this feature, you agree to Jitsi's fair-use policy on the public instance.</div>
+
+            <div className="mt-6 text-xs text-gray-500">By using this feature, you agree to Jitsi&apos;s fair-use policy on the public instance.</div>
+
 
             {/* Active Invites from connections */}
             <div className="mt-8">
@@ -234,6 +261,7 @@ export default function StudyRoomsHome() {
               )}
             </div>
 
+
             <div className="mt-6">
               <Link href="/events" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
@@ -241,6 +269,7 @@ export default function StudyRoomsHome() {
               </Link>
             </div>
           </div>
+
 
           {/* Side Card: Tips / Illustration */}
           <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 border border-gray-200 flex flex-col justify-between">
@@ -271,6 +300,7 @@ export default function StudyRoomsHome() {
           </div>
         </div>
       </div>
+
 
       {/* Invite Friends Modal */}
       {inviteOpen && (
@@ -312,6 +342,7 @@ export default function StudyRoomsHome() {
                     {selectedEmails.size === filteredFriends.length && filteredFriends.length > 0 ? 'Clear All' : 'Select All'}
                   </button>
                 </div>
+
 
                 <div className="mt-4 max-h-80 overflow-y-auto border border-gray-100 rounded-lg">
                   {friendsLoading ? (
@@ -369,3 +400,6 @@ export default function StudyRoomsHome() {
     </div>
   );
 }
+
+
+

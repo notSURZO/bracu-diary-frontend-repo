@@ -1,11 +1,14 @@
 'use client';
 
+
 import Image from 'next/image';
 import { useState } from 'react';
 import { useAuth, useSignUp } from '@clerk/nextjs';
 
+
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+
 
 interface FormData {
   firstName: string;
@@ -17,9 +20,11 @@ interface FormData {
   studentId: string;
 }
 
+
 export default function CustomSignUp() {
   const { isLoaded, signUp, setActive } = useSignUp();
   const { isSignedIn } = useAuth();
+
 
   const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
@@ -36,6 +41,7 @@ export default function CustomSignUp() {
   const [step, setStep] = useState(1); // 1: signup form, 2: verification
   const [code, setCode] = useState('');
 
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -45,6 +51,7 @@ export default function CustomSignUp() {
     if (error) setError('');
   };
 
+
   const validateForm = () => {
     if (!formData.firstName.trim()) return 'First name is required';
     if (formData.firstName.trim().length < 2) return 'First name must be at least 2 characters';
@@ -52,7 +59,7 @@ export default function CustomSignUp() {
     if (formData.lastName.trim().length < 2) return 'Last name must be at least 2 characters';
     if (!formData.username.trim()) return 'Username is required';
     if (formData.username.length < 3) return 'Username must be at least 3 characters';
-    if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) return 'Username can only contain letters, numbers, and underscores';
+    if (!/^\w+$/.test(formData.username)) return 'Username can only contain letters, numbers, and underscores';
     if (!formData.email.trim()) return 'Email is required';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return 'Please enter a valid email';
     if (!formData.password) return 'Password is required';
@@ -63,6 +70,7 @@ export default function CustomSignUp() {
     if (!/^\d+$/.test(formData.studentId)) return 'Student ID must contain only numbers';
     return null;
   };
+
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,10 +110,12 @@ export default function CustomSignUp() {
         password: formData.password,
       });
 
+
       // Ensure sign-up attempt exists before proceeding
       if (!result) {
         throw new Error('Sign up attempt could not be created. Please try again.');
       }
+
 
       // If email verification is disabled, Clerk may complete immediately
       if ((result as any).status === 'complete') {
@@ -130,6 +140,7 @@ export default function CustomSignUp() {
         return;
       }
 
+
       // Otherwise, prepare email verification (for environments where it's enabled)
       try {
         await signUp.reload();
@@ -149,6 +160,7 @@ export default function CustomSignUp() {
     } catch (error: any) {
       console.error('Signup error:', error);
 
+
       if (error.errors && error.errors.length > 0) {
         const clerkError = error.errors[0];
         setError(clerkError.message || 'Signup failed. Please try again.');
@@ -159,6 +171,7 @@ export default function CustomSignUp() {
       setLoading(false);
     }
   };
+
 
   const handleVerification = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,9 +218,10 @@ export default function CustomSignUp() {
     }
   };
 
+
   if (step === 2) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-2xl p-8 w-full max-w-md">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -234,11 +248,12 @@ export default function CustomSignUp() {
     );
   }
 
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      <div className="min-h-screen grid lg:grid-cols-2 items-center">
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="h-full grid lg:grid-cols-2 items-center">
         {/* Left Content - Centered */}
-        <div className="flex flex-col items-center justify-center px-6 lg:px-12 py-12 lg:py-0">
+        <div className="flex flex-col items-center justify-center px-6 lg:px-12 py-12 lg:py-0 h-full">
           {/* Logo and Title */}
           <div className="flex items-center mb-6 space-x-4">
             <Image
@@ -249,12 +264,11 @@ export default function CustomSignUp() {
               className="object-contain"
               priority
             />
-
           </div>
           <span className="text-blue-600 font-medium text-base mb-6">Your Academic Oasis</span>
           <h2 className="text-4xl lg:text-5xl font-bold text-gray-800 mb-6 leading-tight text-center max-w-2xl">
-            Transform Your
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> Academic Journey</span>
+            Transform Your{' '}
+            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Academic Journey</span>
           </h2>
           <p className="text-lg text-gray-600 mb-12 leading-relaxed text-center max-w-xl">
             Experience the future of university life with our intuitive platform designed to help BRAC University students excel in their academic pursuits.
@@ -300,8 +314,9 @@ export default function CustomSignUp() {
           </div>
         </div>
 
+
         {/* Right Side - Signup Form */}
-        <div className="flex items-center justify-center px-6 lg:px-16 py-12 lg:py-0">
+        <div className="h-full flex items-center justify-center px-6 lg:px-16 py-12 lg:py-0">
           <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/30 p-8 w-full max-w-sm max-h-[90vh] overflow-y-auto">
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-gray-800 mb-3">Create Account</h2>
@@ -352,4 +367,5 @@ export default function CustomSignUp() {
       </div>
     </div>
   );
-} 
+}
+

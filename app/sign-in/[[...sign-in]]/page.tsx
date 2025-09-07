@@ -2,14 +2,15 @@
 import { SignIn } from '@clerk/nextjs'
 import Image from "next/image";
 
+
 export default function SignInPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      <div className="min-h-screen grid lg:grid-cols-2 items-center">
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="h-full grid lg:grid-cols-2 items-center">
         {/* Left Content - Centered */}
-        <div className="flex flex-col items-center justify-center px-6 lg:px-16 py-12 lg:py-0">
+        <div className="flex flex-col items-center justify-center px-6 lg:px-16 py-12 lg:py-0 h-full">
           {/* Logo and Title */}
-          <div className="flex items-center mt-8 mb-8 space-x-4">
+          <div className="flex items-center mb-8 space-x-4">
             <Image
               src="/bracu-diary-logo.svg"
               alt="BRACU Diary Logo Text"
@@ -21,14 +22,17 @@ export default function SignInPage() {
           </div>
           <span className="text-blue-600 font-medium text-lg mb-8">Your Academic Oasis</span>
 
+
           <h2 className="text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-800 mb-8 leading-tight text-center max-w-3xl">
-            Transform Your
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> Academic Journey</span>
+            Transform Your{' '}
+            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Academic Journey</span>
           </h2>
+
 
           <p className="text-lg lg:text-xl text-gray-600 mb-16 leading-relaxed text-center max-w-2xl">
             Experience the future of university life with our intuitive platform designed to help BRAC University students excel in their academic pursuits.
           </p>
+
 
           {/* Feature Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl w-full">
@@ -42,6 +46,7 @@ export default function SignInPage() {
               <p className="text-sm text-gray-600 leading-relaxed">Organize courses with intelligent tracking and deadline management</p>
             </div>
 
+
             <div className="bg-white/70 backdrop-blur-sm rounded-xl p-6 shadow-sm border border-white/20 hover:shadow-md transition-all duration-300">
               <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,6 +57,7 @@ export default function SignInPage() {
               <p className="text-sm text-gray-600 leading-relaxed">Build meaningful connections and share resources with peers</p>
             </div>
 
+
             <div className="bg-white/70 backdrop-blur-sm rounded-xl p-6 shadow-sm border border-white/20 hover:shadow-md transition-all duration-300">
               <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,6 +67,7 @@ export default function SignInPage() {
               <h3 className="font-semibold text-gray-800 text-base mb-3">AI-Powered Insights</h3>
               <p className="text-sm text-gray-600 leading-relaxed">Get personalized recommendations and intelligent assistance</p>
             </div>
+
 
             <div className="bg-white/70 backdrop-blur-sm rounded-xl p-6 shadow-sm border border-white/20 hover:shadow-md transition-all duration-300">
               <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg flex items-center justify-center mb-4">
@@ -74,13 +81,15 @@ export default function SignInPage() {
           </div>
         </div>
 
-        <SignIn 
-          forceRedirectUrl="/"
-          signUpUrl="/sign-up"
-        />
-          
-        
+
+        <div className="h-full flex items-center justify-center px-6 lg:px-8">
+          <SignIn
+            forceRedirectUrl="/"
+            signUpUrl="/sign-up"
+          />
+        </div>
       </div>
     </div>
   );
 }
+

@@ -1,10 +1,12 @@
 "use client";
 
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import debounce from 'lodash/debounce';
 import { toast } from 'react-toastify';
 import { useUser } from '@clerk/nextjs';
 import { FaEye, FaPlus, FaExternalLinkAlt, FaTrash, FaSearch, FaFilter, FaSave } from 'react-icons/fa';
+
 
 // --- Interface Definitions to match the updated schema ---
 interface ClassDetails {
@@ -15,11 +17,13 @@ interface ClassDetails {
   endTime: string;
 }
 
+
 interface Section {
   section: string;
   theory: ClassDetails;
   lab?: ClassDetails; // Lab is now optional
 }
+
 
 interface Course {
   _id: string;
@@ -29,6 +33,7 @@ interface Course {
   examDay?: string;
   sections: Section[];
 }
+
 
 // Interface for the flattened data we'll display in the Available Courses list
 interface DisplayCourse {
@@ -47,6 +52,7 @@ interface DisplayCourse {
   link: string;
 }
 
+
 // Interface for the data we'll show in the details modal
 interface ModalCourseData {
   courseCode: string;
@@ -57,28 +63,33 @@ interface ModalCourseData {
   examDay?: string;
 }
 
+
 export default function ManageCourses() {
   const [courses, setCourses] = useState<DisplayCourse[]>([]);
   const [selected, setSelected] = useState<DisplayCourse[]>([]);
   const { user, isLoaded } = useUser();
   const userEmail = user?.emailAddresses[0]?.emailAddress || "";
-  
+ 
   const [searchTerm, setSearchTerm] = useState("");
   const [sectionSearchTerm, setSectionSearchTerm] = useState("");
-  
+ 
   // Using toast for success/error feedback instead of local banner
   const [loading, setLoading] = useState(true);
-  
+  const [saving, setSaving] = useState(false);
+ 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalCourse, setModalCourse] = useState<ModalCourseData | null>(null);
 
+
   const [allCoursesCache, setAllCoursesCache] = useState<Course[]>([]);
+
 
   const handleViewDetails = (courseCode: string, section: string) => {
     const fullCourse = allCoursesCache.find(c => c.courseCode === courseCode);
     if (!fullCourse) return;
     const fullSection = fullCourse.sections.find(s => s.section === section);
     if (!fullSection) return;
+
 
     setModalCourse({
       courseCode: fullCourse.courseCode,
@@ -91,6 +102,7 @@ export default function ManageCourses() {
     setIsModalOpen(true);
   };
 
+
   const fetchAndSyncCourses = async () => {
     setLoading(true);
     try {
@@ -98,16 +110,19 @@ export default function ManageCourses() {
       const allCourses = await allCoursesRes.json();
       setAllCoursesCache(allCourses);
 
+
       const enrolledRes = await fetch(`/api/user-courses?email=${encodeURIComponent(userEmail)}`);
       const enrolledData = await enrolledRes.json();
       const enrolled = Array.isArray(enrolledData.enrolledCourses) ? enrolledData.enrolledCourses : [];
       setSelected(enrolled);
 
+
       const enrolledCourseCodes = enrolled
         .filter((course: DisplayCourse) => !course.courseCode.endsWith('L'))
         .map((course: DisplayCourse) => course.courseCode);
 
-      const availableCourses = allCourses.flatMap((c: Course) => 
+
+      const availableCourses = allCourses.flatMap((c: Course) =>
         c.sections.map((s: Section) => ({
           _id: c._id + s.section,
           originalCourseId: c._id, // Add originalCourseId
@@ -124,7 +139,7 @@ export default function ManageCourses() {
           link: c.link
         }))
       ).filter((dc: DisplayCourse) => !enrolledCourseCodes.includes(dc.courseCode));
-      
+     
       setCourses(availableCourses);
     } catch (error) {
       console.error("Failed to fetch and sync courses:", error);
@@ -133,14 +148,17 @@ export default function ManageCourses() {
     }
   };
 
+
   useEffect(() => {
     if (!isLoaded || !userEmail) return;
     fetchAndSyncCourses();
   }, [isLoaded, userEmail]);
 
+
   const handleSelect = (course: DisplayCourse) => {
     const fullCourse = allCoursesCache.find(c => c.courseCode === course.courseCode);
     const fullSection = fullCourse?.sections.find(s => s.section === course.section);
+
 
     if (fullSection) {
       const newSelected: DisplayCourse[] = [{
@@ -158,6 +176,7 @@ export default function ManageCourses() {
         hasLab: !!fullSection.lab,
         link: fullCourse?.link || '',
       }];
+
 
       if (fullSection.lab) {
         newSelected.push({
@@ -177,18 +196,20 @@ export default function ManageCourses() {
         });
       }
 
+
       setSelected(prevSelected => [...prevSelected, ...newSelected]);
       setCourses(prevCourses => prevCourses.filter(c => c.courseCode !== course.courseCode));
     }
   };
 
+
   const handleRemove = (course: DisplayCourse) => {
-    const newSelected = selected.filter(c => 
-      c.courseCode !== course.courseCode && 
+    const newSelected = selected.filter(c =>
+      c.courseCode !== course.courseCode &&
       c.courseCode !== `${course.courseCode}L`
     );
     setSelected(newSelected);
-    
+   
     const fullCourse = allCoursesCache.find(c => c.courseCode === course.courseCode);
     if (fullCourse) {
       const sectionsToAddBack = fullCourse.sections.map(s => ({
@@ -210,31 +231,45 @@ export default function ManageCourses() {
     }
   };
 
+
   const handleSave = async () => {
     if (!userEmail) return;
     try {
-      const res = await fetch(`/api/user-courses?email=${encodeURIComponent(userEmail)}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: userEmail, selectedCourses: selected }),
-      });
+      setSaving(true);
+      await toast.promise(
+        (async () => {
+          const res = await fetch(`/api/user-courses?email=${encodeURIComponent(userEmail)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: userEmail, selectedCourses: selected }),
+          });
 
-      if (!res.ok) {
-        const postRes = await fetch("/api/user-courses", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: userEmail, selectedCourses: selected }),
-        });
-        if (!postRes.ok) throw new Error('Failed to create user courses');
-      }
 
-      await fetchAndSyncCourses();
-      toast.success('Courses saved successfully!');
+          if (!res.ok) {
+            const postRes = await fetch("/api/user-courses", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: userEmail, selectedCourses: selected }),
+            });
+            if (!postRes.ok) throw new Error('Failed to create user courses');
+          }
+        })(),
+        {
+          pending: 'Saving courses... ',
+          success: 'Courses saved successfully!',
+          error: 'Failed to save courses. Please try again.',
+        }
+      );
+      // Refresh in background; do not delay success toast
+      fetchAndSyncCourses().catch(() => {});
     } catch (err) {
       console.error('Failed to save courses:', err);
-      toast.error('Failed to save courses. Please try again.');
+      // Error toast already shown by toast.promise
+    } finally {
+      setSaving(false);
     }
   };
+
 
   // Debounce the save action to prevent rapid duplicate clicks
   const handleSaveRef = useRef(handleSave);
@@ -242,24 +277,27 @@ export default function ManageCourses() {
     handleSaveRef.current = handleSave;
   }, [handleSave]);
 
+
   const debouncedSave = useMemo(
-    () => debounce(() => handleSaveRef.current(), 1000, { leading: true, trailing: false }),
+    () => debounce(() => handleSaveRef.current(), 300, { leading: true, trailing: false }),
     []
   );
+
 
   useEffect(() => {
     return () => {
       debouncedSave.cancel();
     };
   }, [debouncedSave]);
-  
+ 
   const filteredCourses = courses.filter((c: DisplayCourse) =>
     (c.courseCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.courseName.toLowerCase().includes(searchTerm.toLowerCase())) &&
     c.section.toLowerCase().includes(sectionSearchTerm.toLowerCase())
   );
-  
+ 
   const visibleSelected = selected.filter((course: DisplayCourse) => !course.courseCode.endsWith('L'));
+
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 text-gray-800 font-sans w-full p-4 md:p-6">
@@ -269,13 +307,14 @@ export default function ManageCourses() {
         <p className="text-brac-blue">Manage your enrolled courses for the semester</p>
       </div>
 
+
       {/* Details Modal */}
       {isModalOpen && modalCourse && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4 backdrop-blur-sm">
           <div className="bg-white rounded-lg p-6 md:p-8 max-w-lg w-full shadow-xl border border-gray-200">
             <h3 className="text-xl font-bold text-brac-navy mb-4">{modalCourse.courseCode} - {modalCourse.courseName}</h3>
             <p className="text-md font-semibold text-brac-blue mb-5">Section: {modalCourse.section}</p>
-            
+           
             <div className="bg-brac-blue-light rounded-lg p-4 mb-4 border border-brac-blue">
               <h4 className="text-lg font-bold text-brac-navy mb-2">Theory</h4>
               <div className="space-y-2 text-sm">
@@ -285,7 +324,7 @@ export default function ManageCourses() {
                 <p><span className="font-medium">Time:</span> {modalCourse.theory.startTime} - {modalCourse.theory.endTime}</p>
               </div>
             </div>
-            
+           
             {modalCourse.lab && (
               <div className="bg-brac-gold-light rounded-lg p-4 border border-brac-gold">
                 <h4 className="text-lg font-bold text-brac-navy mb-2">Lab</h4>
@@ -297,7 +336,7 @@ export default function ManageCourses() {
                 </div>
               </div>
             )}
-            
+           
             <div className="text-center mt-6">
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -310,6 +349,7 @@ export default function ManageCourses() {
         </div>
       )}
 
+
       {/* Main Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
         {/* Available Courses Column */}
@@ -318,7 +358,7 @@ export default function ManageCourses() {
             <FaSearch className="text-brac-blue" />
             Available Courses
           </h2>
-          
+         
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-grow">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -345,7 +385,7 @@ export default function ManageCourses() {
               />
             </div>
           </div>
-          
+         
           <div className="w-full flex-grow max-h-[60vh] overflow-y-auto space-y-3">
             {loading ? (
               <div className="flex items-center justify-center p-8 h-full">
@@ -390,9 +430,9 @@ export default function ManageCourses() {
                     >
                       <FaPlus className="h-4 w-4" />
                     </button>
-                    <a 
-                      href={course.link} 
-                      target="_blank" 
+                    <a
+                      href={course.link}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="p-2 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition-colors"
                       title="View Course on Official Site"
@@ -405,13 +445,13 @@ export default function ManageCourses() {
             )}
           </div>
         </div>
-        
+       
         {/* Enrolled Courses Column */}
         <div className="flex flex-col gap-4 bg-white p-5 rounded-lg shadow-sm border border-gray-200">
           <h2 className="font-bold text-brac-navy text-xl pb-2 border-b border-gray-200 flex items-center gap-2">
             My Enrolled Courses
           </h2>
-          
+         
           <div className="w-full flex-grow max-h-[60vh] overflow-y-auto space-y-3">
             {visibleSelected.length === 0 ? (
               <div className="text-center text-gray-500 font-medium py-8 rounded-lg bg-gray-50">
@@ -452,15 +492,27 @@ export default function ManageCourses() {
               ))
             )}
           </div>
-          
+         
           <div className="w-full flex justify-center mt-4 pt-4 border-t border-gray-200">
             <button
               className="flex items-center gap-2 px-4 py-2 bg-brac-blue text-white rounded-md font-medium hover:bg-brac-blue-dark transition-colors disabled:opacity-50"
               onClick={() => debouncedSave()}
-              disabled={!userEmail || selected.length === 0}
+              disabled={!userEmail || selected.length === 0 || saving}
             >
-              <FaSave className="h-4 w-4" />
-              Save My Courses
+              {saving ? (
+                <>
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                  </svg>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <FaSave className="h-4 w-4" />
+                  Save My Courses
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -468,3 +520,6 @@ export default function ManageCourses() {
     </div>
   );
 }
+
+
+
