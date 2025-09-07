@@ -347,7 +347,7 @@ export default function ConditionalHeader() {
     };
     if (isSignedIn && !isStudyRoomsPage) {
       poll();
-      timer = setInterval(poll, 15000);
+      timer = setInterval(poll, 120000);
     }
     return () => { if (timer) clearInterval(timer); };
   }, [isSignedIn, isStudyRoomsPage]);

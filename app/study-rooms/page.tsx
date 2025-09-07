@@ -138,11 +138,11 @@ export default function StudyRoomsHome() {
   };
 
 
-  useEffect(() => {
-    loadInvites();
-    // Removed periodic polling; fetch occurs on page load and via Refresh button only
-    return () => {};
-  }, []);
+  // useEffect(() => {
+  //   loadInvites();
+  //   // Removed periodic polling; fetch occurs on page load and via Refresh button only
+  //   return () => {};
+  // }, []);
 
 
   return (
